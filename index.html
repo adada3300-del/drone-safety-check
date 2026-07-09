@@ -120,7 +120,6 @@
     h2 {
       margin: 0 0 12px;
       color: #1e3a8a;
-      letter-spacing: -0.5px;
     }
 
     .desc {
@@ -187,13 +186,8 @@
     }
 
     @keyframes cloudMove {
-      from {
-        transform: translateX(-180px);
-      }
-
-      to {
-        transform: translateX(900px);
-      }
+      from { transform: translateX(-180px); }
+      to { transform: translateX(900px); }
     }
 
     .floor {
@@ -289,15 +283,11 @@
     }
 
     @keyframes rainFall {
-      to {
-        transform: translate(70px, 620px);
-      }
+      to { transform: translate(70px, 620px); }
     }
 
     @keyframes snowFall {
-      to {
-        transform: translate(35px, 620px);
-      }
+      to { transform: translate(35px, 620px); }
     }
 
     .drone-wrap {
@@ -359,21 +349,6 @@
       border-radius: 50%;
       background: rgba(15, 23, 42, 0.18);
       filter: blur(14px);
-    }
-
-    .drone-type-chip {
-      position: absolute;
-      left: 50%;
-      top: 100%;
-      transform: translateX(-50%);
-      margin-top: 4px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.76);
-      color: white;
-      font-size: 13px;
-      font-weight: 800;
-      white-space: nowrap;
     }
 
     .shadow {
@@ -617,8 +592,8 @@
       <span class="badge">Drone Flight Preview Simulator</span>
       <h1>드론 비행 전<br />3D 상황 예측 시뮬레이터</h1>
       <p>
-        1종·2종·3종·4종 드론을 선택하고 기상, 배터리, 온도, 적재 무게를 입력하면
-        비행 전 예상 상황을 3D 형태로 시뮬레이션합니다.
+        기상 조건, 배터리, 온도, 적재 무게 등을 입력하면
+        드론 비행 전 예상 상황을 3D 형태로 시뮬레이션합니다.
       </p>
     </div>
   </header>
@@ -628,8 +603,8 @@
       <section>
         <h2>1. 3D 시뮬레이션 화면</h2>
         <p class="desc">
-          선택한 드론 종류에 따라 이미지, 크기, 바람 민감도, 배터리 소모량이 달라집니다.
-          위험 조건에서는 추락 또는 돌풍으로 뒤집히는 상황이 나타납니다.
+          입력 조건에 따라 드론의 기울기, 흔들림, 배터리 감소, 날씨 효과,
+          위험 상황 발생 여부가 달라집니다.
         </p>
 
         <div id="scene" class="scene">
@@ -653,15 +628,14 @@
           <div id="droneWrap" class="drone-wrap">
             <div id="drone3d" class="photo-drone3d">
               <div class="drone-photo-card">
-                <img id="droneImage" src="images/drone-class4.png" alt="선택한 드론 이미지" />
+                <img id="droneImage" src="images/drone.png" alt="일반 드론 이미지" />
                 <div class="drone-glow"></div>
               </div>
-              <div id="droneTypeChip" class="drone-type-chip">4종 드론</div>
             </div>
           </div>
 
           <div id="banner" class="warning-banner">
-            드론 종류와 조건을 입력한 뒤 <b>시뮬레이션 시작</b> 버튼을 눌러 주세요.
+            조건을 입력한 뒤 <b>시뮬레이션 시작</b> 버튼을 눌러 주세요.
           </div>
         </div>
       </section>
@@ -674,16 +648,6 @@
         </p>
 
         <div class="control-grid">
-          <div>
-            <label for="droneType">드론 종류</label>
-            <select id="droneType" onchange="previewDroneModel()">
-              <option value="class1">1종 · 25kg 초과</option>
-              <option value="class2">2종 · 7kg 초과~25kg 이하</option>
-              <option value="class3">3종 · 2kg 초과~7kg 이하</option>
-              <option value="class4" selected>4종 · 250g 초과~2kg 이하</option>
-            </select>
-          </div>
-
           <div>
             <label for="wind">평균 풍속 m/s</label>
             <input id="wind" type="number" min="0" step="0.1" value="4" />
@@ -791,7 +755,7 @@
     <section style="margin-top: 18px;">
       <h2>4. 시뮬레이션 기록</h2>
       <p class="desc">
-        시작 버튼을 누를 때마다 선택한 드론 종류와 조건, 결과가 기록됩니다.
+        시작 버튼을 누를 때마다 입력 조건과 결과가 기록됩니다.
         이 표는 보고서에서 조건별 비교 자료로 활용할 수 있습니다.
       </p>
 
@@ -800,7 +764,6 @@
           <thead>
             <tr>
               <th>시간</th>
-              <th>드론 종류</th>
               <th>풍속</th>
               <th>돌풍</th>
               <th>강수</th>
@@ -814,7 +777,7 @@
 
           <tbody id="logBody">
             <tr>
-              <td colspan="10">아직 기록이 없습니다.</td>
+              <td colspan="9">아직 기록이 없습니다.</td>
             </tr>
           </tbody>
         </table>
@@ -827,7 +790,7 @@
   </main>
 
   <footer>
-    Drone Flight Preview Simulator · 1종·2종·3종·4종 드론 이미지 기반 3D 시뮬레이션
+    Drone Flight Preview Simulator · 일반 드론 이미지 기반 3D 시뮬레이션
   </footer>
 
   <script>
@@ -838,49 +801,9 @@
     let crashTriggered = false;
 
     const totalSteps = 150;
-    const logKey = "dronePreviewSimulationLogsV4";
-
-    const droneTypes = {
-      class1: {
-        label: "1종 드론",
-        range: "25kg 초과",
-        image: "images/drone-class1.png",
-        scale: 1.18,
-        windSensitivity: 0.82,
-        drainFactor: 1.35,
-        stabilityBonus: 6
-      },
-      class2: {
-        label: "2종 드론",
-        range: "7kg 초과~25kg 이하",
-        image: "images/drone-class2.png",
-        scale: 1.10,
-        windSensitivity: 0.92,
-        drainFactor: 1.22,
-        stabilityBonus: 4
-      },
-      class3: {
-        label: "3종 드론",
-        range: "2kg 초과~7kg 이하",
-        image: "images/drone-class3.png",
-        scale: 1.0,
-        windSensitivity: 1.05,
-        drainFactor: 1.1,
-        stabilityBonus: 2
-      },
-      class4: {
-        label: "4종 드론",
-        range: "250g 초과~2kg 이하",
-        image: "images/drone-class4.png",
-        scale: 0.88,
-        windSensitivity: 1.18,
-        drainFactor: 1.0,
-        stabilityBonus: 0
-      }
-    };
+    const logKey = "dronePreviewSimulationLogsSimple";
 
     const defaultInputs = {
-      droneType: "class4",
       wind: 4,
       gust: 6,
       rain: 0,
@@ -897,7 +820,6 @@
 
     function getInputData() {
       return {
-        droneType: document.getElementById("droneType").value,
         wind: Number(document.getElementById("wind").value),
         gust: Number(document.getElementById("gust").value),
         rain: Number(document.getElementById("rain").value),
@@ -950,35 +872,9 @@
       return map[type] || "없음";
     }
 
-    function previewDroneModel() {
-      const data = getInputData();
-      updateDroneModel(data);
-      document.getElementById("banner").innerHTML =
-        `${droneTypes[data.droneType].label}이 선택되었습니다. 조건을 입력하고 시뮬레이션을 시작해 주세요.`;
-    }
-
-    function updateDroneModel(data) {
-      const type = droneTypes[data.droneType];
-      const droneImage = document.getElementById("droneImage");
-      const droneTypeChip = document.getElementById("droneTypeChip");
-
-      document.documentElement.style.setProperty("--drone-scale", type.scale);
-
-      if (droneImage) {
-        droneImage.src = type.image;
-        droneImage.alt = `${type.label} 이미지`;
-      }
-
-      if (droneTypeChip) {
-        droneTypeChip.textContent = `${type.label} · ${type.range}`;
-      }
-    }
-
     function calculateRisk(data) {
-      const type = droneTypes[data.droneType];
-
-      const windRisk = clamp((data.wind * type.windSensitivity / 12) * 100, 0, 100);
-      const gustRisk = clamp((data.gust * type.windSensitivity / 15) * 100, 0, 100);
+      const windRisk = clamp((data.wind / 12) * 100, 0, 100);
+      const gustRisk = clamp((data.gust / 15) * 100, 0, 100);
       const rainRisk = data.rain;
 
       const tempRisk = data.temp < 5
@@ -996,21 +892,20 @@
       const skillRisk = data.skill;
 
       const totalRisk =
-        windRisk * 0.24 +
+        windRisk * 0.25 +
         gustRisk * 0.13 +
         rainRisk * 0.17 +
         tempRisk * 0.13 +
         batteryRisk * 0.18 +
         payloadRisk * 0.07 +
         durationRisk * 0.04 +
-        skillRisk * 0.04 -
-        type.stabilityBonus;
+        skillRisk * 0.03;
 
       const safetyScore = Math.round(clamp(100 - totalRisk, 0, 100));
 
       const drain =
         8 +
-        data.duration * 0.7 * type.drainFactor +
+        data.duration * 0.7 +
         windRisk * 0.07 +
         gustRisk * 0.04 +
         rainRisk * 0.04 +
@@ -1036,14 +931,6 @@
         : Math.round(totalSteps * clamp(0.78 - totalRisk / 220, 0.38, 0.7));
 
       return {
-        windRisk,
-        gustRisk,
-        rainRisk,
-        tempRisk,
-        batteryRisk,
-        payloadRisk,
-        durationRisk,
-        skillRisk,
         totalRisk,
         safetyScore,
         drain,
@@ -1086,14 +973,13 @@
       simulationStep = 0;
       crashTriggered = false;
 
-      updateDroneModel(data);
       updateWeather(data);
       updateAnalysisText(data, currentResult);
       saveLog(data, currentResult);
       renderLogs();
 
       document.getElementById("banner").innerHTML =
-        "시뮬레이션을 시작했습니다. 선택한 드론과 조건에 따라 비행 상황이 표시됩니다.";
+        "시뮬레이션을 시작했습니다. 입력 조건에 따라 비행 상황이 표시됩니다.";
 
       simulationTimer = setInterval(runSimulationFrame, 85);
     }
@@ -1109,7 +995,6 @@
       stopSimulation();
 
       if (resetInputs) {
-        document.getElementById("droneType").value = defaultInputs.droneType;
         document.getElementById("wind").value = defaultInputs.wind;
         document.getElementById("gust").value = defaultInputs.gust;
         document.getElementById("rain").value = defaultInputs.rain;
@@ -1126,7 +1011,6 @@
       crashTriggered = false;
 
       resetVisualOnly();
-      previewDroneModel();
 
       document.getElementById("progressText").textContent = "0%";
       document.getElementById("batteryText").textContent = "-";
@@ -1139,10 +1023,10 @@
       document.getElementById("safetyBar").style.width = "0%";
 
       document.getElementById("analysisBox").innerHTML =
-        "초기화되었습니다. 드론 종류와 조건을 입력하고 시뮬레이션을 다시 시작해 주세요.";
+        "초기화되었습니다. 조건을 입력하고 시뮬레이션을 다시 시작해 주세요.";
 
       document.getElementById("banner").innerHTML =
-        "초기화되었습니다. 드론 종류와 조건을 입력한 뒤 시뮬레이션 시작 버튼을 눌러 주세요.";
+        "초기화되었습니다. 조건을 입력한 뒤 시뮬레이션 시작 버튼을 눌러 주세요.";
     }
 
     function resetVisualOnly() {
@@ -1154,6 +1038,7 @@
       document.documentElement.style.setProperty("--tilt-y", "0deg");
       document.documentElement.style.setProperty("--tilt-z", "0deg");
       document.documentElement.style.setProperty("--scene-brightness", "1");
+      document.documentElement.style.setProperty("--drone-scale", "1");
 
       document.getElementById("weatherLayer").innerHTML = "";
 
@@ -1178,11 +1063,9 @@
         return;
       }
 
-      const type = droneTypes[currentData.droneType];
-
       const baseX = -245 + progress * 490;
-      const windDrift = Math.sin(simulationStep * 0.18) * currentData.wind * 1.8 * type.windSensitivity;
-      const gustShake = Math.sin(simulationStep * 0.55) * currentData.gust * 1.15 * type.windSensitivity;
+      const windDrift = Math.sin(simulationStep * 0.18) * currentData.wind * 1.8;
+      const gustShake = Math.sin(simulationStep * 0.55) * currentData.gust * 1.15;
       const riskDrop = currentResult.totalRisk > 65
         ? Math.sin(simulationStep * 0.12) * 35
         : Math.sin(simulationStep * 0.09) * 12;
@@ -1190,8 +1073,8 @@
       const moveX = baseX + windDrift;
       const moveY = -35 + riskDrop + Math.sin(simulationStep * 0.12) * 10;
 
-      const tiltX = 58 + clamp(currentData.gust * 2.2 * type.windSensitivity, 0, 34);
-      const tiltY = clamp(currentData.wind * -2.4 * type.windSensitivity + Math.sin(simulationStep * 0.25) * currentData.gust, -34, 26);
+      const tiltX = 58 + clamp(currentData.gust * 2.2, 0, 34);
+      const tiltY = clamp(currentData.wind * -2.4 + Math.sin(simulationStep * 0.25) * currentData.gust, -34, 26);
       const tiltZ = clamp((100 - currentResult.safetyScore) * 0.22 + gustShake, -30, 38);
 
       document.documentElement.style.setProperty("--drone-x", `${moveX}px`);
@@ -1348,10 +1231,6 @@
 
     function updateAnalysisText(data, result) {
       const reasons = [];
-      const type = droneTypes[data.droneType];
-
-      reasons.push(`선택한 드론은 ${type.label}이며, 무게 기준은 ${type.range}입니다.`);
-      reasons.push("드론 종류에 따라 바람 민감도, 배터리 소모 계수, 안정성 보정값을 다르게 적용했습니다.");
 
       if (data.wind >= 9) {
         reasons.push("평균 풍속이 높아 드론이 위치를 유지하기 어렵습니다.");
@@ -1405,14 +1284,12 @@
 
     function saveLog(data, result) {
       const logs = JSON.parse(localStorage.getItem(logKey) || "[]");
-      const type = droneTypes[data.droneType];
 
       logs.unshift({
         time: new Date().toLocaleString("ko-KR", {
           hour: "2-digit",
           minute: "2-digit"
         }),
-        droneType: type.label,
         wind: data.wind,
         gust: data.gust,
         rain: rainText(data.rain),
@@ -1431,14 +1308,13 @@
       const body = document.getElementById("logBody");
 
       if (logs.length === 0) {
-        body.innerHTML = `<tr><td colspan="10">아직 기록이 없습니다.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="9">아직 기록이 없습니다.</td></tr>`;
         return;
       }
 
       body.innerHTML = logs.map(log => `
         <tr>
           <td>${log.time}</td>
-          <td>${log.droneType}</td>
           <td>${log.wind}</td>
           <td>${log.gust}</td>
           <td>${log.rain}</td>
@@ -1460,7 +1336,6 @@
       resetVisualOnly();
 
       if (type === "safe") {
-        document.getElementById("droneType").value = "class4";
         document.getElementById("wind").value = 3;
         document.getElementById("gust").value = 5;
         document.getElementById("rain").value = 0;
@@ -1472,7 +1347,6 @@
       }
 
       if (type === "flip") {
-        document.getElementById("droneType").value = "class3";
         document.getElementById("wind").value = 12;
         document.getElementById("gust").value = 15;
         document.getElementById("rain").value = 35;
@@ -1484,7 +1358,6 @@
       }
 
       if (type === "power") {
-        document.getElementById("droneType").value = "class2";
         document.getElementById("wind").value = 7;
         document.getElementById("gust").value = 9;
         document.getElementById("rain").value = 35;
@@ -1494,12 +1367,9 @@
         document.getElementById("duration").value = 24;
         document.getElementById("skill").value = 15;
       }
-
-      previewDroneModel();
     }
 
     renderLogs();
-    previewDroneModel();
   </script>
 </body>
 </html>
