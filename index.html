@@ -3,21 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Drone Safety Lab</title>
+
+  <title>Drone Flight Preview Simulator</title>
 
   <style>
     :root {
-      --bg: #edf5ff;
+      --bg: #eef6ff;
       --card: #ffffff;
       --text: #172033;
-      --muted: #627084;
+      --muted: #64748b;
       --blue: #2563eb;
-      --blue2: #38bdf8;
+      --sky: #38bdf8;
       --safe: #16a34a;
       --warning: #f97316;
       --danger: #dc2626;
       --line: #dbe7f5;
-      --shadow: 0 18px 45px rgba(30, 64, 175, 0.12);
+      --shadow: 0 18px 45px rgba(30, 64, 175, 0.14);
+
+      --drone-x: 0px;
+      --drone-y: 0px;
+      --tilt-x: 58deg;
+      --tilt-y: 0deg;
+      --tilt-z: 0deg;
+      --scene-brightness: 1;
     }
 
     * {
@@ -34,9 +42,9 @@
     }
 
     header {
-      padding: 48px 20px 28px;
-      background: linear-gradient(135deg, #0f172a, #1d4ed8 55%, #38bdf8);
+      background: linear-gradient(135deg, #0f172a, #1d4ed8 58%, #38bdf8);
       color: white;
+      padding: 48px 20px 34px;
       position: relative;
       overflow: hidden;
     }
@@ -44,16 +52,16 @@
     header::after {
       content: "";
       position: absolute;
-      width: 360px;
-      height: 360px;
-      right: -120px;
-      top: -120px;
+      width: 420px;
+      height: 420px;
+      right: -130px;
+      top: -160px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.13);
+      background: rgba(255, 255, 255, 0.14);
     }
 
     .hero {
-      max-width: 1100px;
+      max-width: 1180px;
       margin: 0 auto;
       position: relative;
       z-index: 1;
@@ -62,9 +70,9 @@
     .badge {
       display: inline-block;
       padding: 8px 14px;
-      border: 1px solid rgba(255, 255, 255, 0.45);
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.45);
       font-size: 14px;
       margin-bottom: 16px;
     }
@@ -72,39 +80,38 @@
     h1 {
       margin: 0;
       font-size: clamp(32px, 6vw, 58px);
-      line-height: 1.05;
+      line-height: 1.08;
       letter-spacing: -1.5px;
     }
 
     header p {
-      max-width: 760px;
+      max-width: 820px;
       margin: 16px 0 0;
+      color: rgba(255, 255, 255, 0.9);
       font-size: 18px;
       line-height: 1.7;
-      color: rgba(255, 255, 255, 0.9);
     }
 
     main {
-      max-width: 1100px;
+      max-width: 1180px;
       margin: 0 auto;
       padding: 28px 18px 60px;
     }
 
-    .grid {
+    .layout {
       display: grid;
       grid-template-columns: 1fr;
       gap: 18px;
     }
 
-    @media (min-width: 900px) {
-      .grid {
-        grid-template-columns: 1.05fr 0.95fr;
+    @media (min-width: 980px) {
+      .layout {
+        grid-template-columns: 1.25fr 0.75fr;
       }
     }
 
-    section,
-    .card {
-      background: rgba(255, 255, 255, 0.92);
+    section {
+      background: rgba(255, 255, 255, 0.94);
       border: 1px solid rgba(219, 231, 245, 0.9);
       border-radius: 24px;
       padding: 24px;
@@ -112,7 +119,7 @@
     }
 
     h2 {
-      margin: 0 0 14px;
+      margin: 0 0 12px;
       color: #1e3a8a;
       letter-spacing: -0.5px;
     }
@@ -124,14 +131,347 @@
     .desc {
       color: var(--muted);
       line-height: 1.7;
-      margin: 0 0 18px;
+      margin: 0 0 16px;
+    }
+
+    .scene {
+      position: relative;
+      height: 520px;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background:
+        radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.95), transparent 18%),
+        linear-gradient(180deg, #bae6fd 0%, #e0f2fe 48%, #dbeafe 100%);
+      perspective: 1000px;
+      filter: brightness(var(--scene-brightness));
+    }
+
+    .sun {
+      position: absolute;
+      right: 48px;
+      top: 36px;
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      background: #fde68a;
+      box-shadow: 0 0 45px rgba(253, 230, 138, 0.9);
+    }
+
+    .cloud {
+      position: absolute;
+      width: 150px;
+      height: 48px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      top: 70px;
+      left: 42px;
+      animation: cloudMove 18s linear infinite;
+    }
+
+    .cloud::before,
+    .cloud::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.88);
+    }
+
+    .cloud::before {
+      width: 70px;
+      height: 70px;
+      left: 24px;
+      top: -30px;
+    }
+
+    .cloud::after {
+      width: 56px;
+      height: 56px;
+      right: 26px;
+      top: -22px;
+    }
+
+    @keyframes cloudMove {
+      from {
+        transform: translateX(-180px);
+      }
+
+      to {
+        transform: translateX(900px);
+      }
+    }
+
+    .floor {
+      position: absolute;
+      left: 50%;
+      bottom: -110px;
+      width: 860px;
+      height: 350px;
+      transform: translateX(-50%) rotateX(66deg);
+      background:
+        linear-gradient(#93c5fd 1px, transparent 1px),
+        linear-gradient(90deg, #93c5fd 1px, transparent 1px);
+      background-size: 42px 42px;
+      opacity: 0.7;
+      border-radius: 50%;
+    }
+
+    .path {
+      position: absolute;
+      left: 12%;
+      right: 12%;
+      top: 52%;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.25);
+    }
+
+    .path::after {
+      content: "예상 비행 경로";
+      position: absolute;
+      right: 0;
+      top: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e40af;
+    }
+
+    .wind-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .wind-line {
+      position: absolute;
+      left: -180px;
+      width: 130px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.5);
+      animation: windMove 2.4s linear infinite;
+    }
+
+    .wind-line:nth-child(1) { top: 90px; animation-delay: 0s; }
+    .wind-line:nth-child(2) { top: 145px; animation-delay: 0.5s; }
+    .wind-line:nth-child(3) { top: 205px; animation-delay: 1s; }
+    .wind-line:nth-child(4) { top: 270px; animation-delay: 1.4s; }
+    .wind-line:nth-child(5) { top: 335px; animation-delay: 1.8s; }
+
+    @keyframes windMove {
+      from {
+        transform: translateX(0);
+        opacity: 0.1;
+      }
+
+      45% {
+        opacity: 0.9;
+      }
+
+      to {
+        transform: translateX(1100px);
+        opacity: 0.05;
+      }
+    }
+
+    .weather-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      top: -30px;
+      width: 2px;
+      height: 24px;
+      background: rgba(37, 99, 235, 0.45);
+      animation: rainFall 1s linear infinite;
+    }
+
+    .particle.snow {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      animation: snowFall 3.8s linear infinite;
+    }
+
+    @keyframes rainFall {
+      to {
+        transform: translate(70px, 620px);
+      }
+    }
+
+    @keyframes snowFall {
+      to {
+        transform: translate(35px, 620px);
+      }
+    }
+
+    .drone-wrap {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 300px;
+      height: 300px;
+      transform:
+        translate(calc(-50% + var(--drone-x)), calc(-50% + var(--drone-y)));
+      transform-style: preserve-3d;
+      transition: transform 0.18s linear;
+    }
+
+    .drone3d {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      transform-style: preserve-3d;
+      transform:
+        rotateX(var(--tilt-x))
+        rotateY(var(--tilt-y))
+        rotateZ(var(--tilt-z));
+      transition: transform 0.18s linear;
+    }
+
+    .drone-body {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 94px;
+      height: 62px;
+      transform: translate(-50%, -50%) translateZ(42px);
+      border-radius: 20px;
+      background: linear-gradient(135deg, #0f172a, #2563eb 60%, #38bdf8);
+      box-shadow: 0 22px 38px rgba(15, 23, 42, 0.32);
+    }
+
+    .drone-body::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 14px;
+      width: 26px;
+      height: 13px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .drone-body::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -20px;
+      width: 36px;
+      height: 20px;
+      transform: translateX(-50%);
+      border-radius: 0 0 18px 18px;
+      background: rgba(15, 23, 42, 0.75);
+    }
+
+    .arm {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 238px;
+      height: 13px;
+      transform: translate(-50%, -50%) translateZ(28px);
+      background: #0f172a;
+      border-radius: 999px;
+    }
+
+    .arm.vertical {
+      transform: translate(-50%, -50%) rotateZ(90deg) translateZ(28px);
+    }
+
+    .motor {
+      position: absolute;
+      width: 82px;
+      height: 82px;
+      border-radius: 50%;
+      background: #e0f2fe;
+      border: 10px solid #1e3a8a;
+      box-shadow: 0 14px 24px rgba(15, 23, 42, 0.22);
+      transform: translateZ(48px);
+    }
+
+    .motor::before,
+    .motor::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 104px;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.36);
+      transform: translate(-50%, -50%);
+      animation: propellerSpin 0.42s linear infinite;
+    }
+
+    .motor::after {
+      transform: translate(-50%, -50%) rotate(90deg);
+    }
+
+    @keyframes propellerSpin {
+      from {
+        rotate: 0deg;
+      }
+
+      to {
+        rotate: 360deg;
+      }
+    }
+
+    .m1 { left: 0; top: 0; }
+    .m2 { right: 0; top: 0; }
+    .m3 { left: 0; bottom: 0; }
+    .m4 { right: 0; bottom: 0; }
+
+    .shadow {
+      position: absolute;
+      left: 50%;
+      bottom: 92px;
+      width: 240px;
+      height: 45px;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.18);
+      border-radius: 50%;
+      filter: blur(13px);
+    }
+
+    .warning-banner {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      bottom: 22px;
+      padding: 15px 18px;
+      border-radius: 18px;
+      background: rgba(15, 23, 42, 0.78);
+      color: white;
+      line-height: 1.6;
+      backdrop-filter: blur(8px);
+    }
+
+    .control-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0 12px;
+    }
+
+    @media (min-width: 680px) {
+      .control-grid {
+        grid-template-columns: 1fr 1fr;
+      }
     }
 
     label {
       display: block;
-      margin: 16px 0 7px;
-      font-weight: 700;
-      color: #23314d;
+      margin: 14px 0 7px;
+      font-weight: 800;
+      color: #25314d;
     }
 
     input,
@@ -152,28 +492,16 @@
       box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
     }
 
-    .input-row {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0 14px;
-    }
-
-    @media (min-width: 650px) {
-      .input-row {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-
     .button-row {
       display: grid;
       grid-template-columns: 1fr;
       gap: 10px;
-      margin-top: 20px;
+      margin-top: 18px;
     }
 
-    @media (min-width: 650px) {
+    @media (min-width: 680px) {
       .button-row {
-        grid-template-columns: 1.2fr 1fr 1fr;
+        grid-template-columns: 1fr 1fr;
       }
     }
 
@@ -182,16 +510,14 @@
       border-radius: 14px;
       padding: 14px 16px;
       font-size: 16px;
-      font-weight: 800;
+      font-weight: 900;
       cursor: pointer;
       background: var(--blue);
       color: white;
-      transition: transform 0.15s ease, filter 0.15s ease;
     }
 
     button:hover {
       filter: brightness(0.96);
-      transform: translateY(-1px);
     }
 
     button.secondary {
@@ -199,123 +525,58 @@
       color: #1e40af;
     }
 
-    button.danger-btn {
+    button.stop {
       background: #fee2e2;
       color: #991b1b;
     }
 
-    .result-top {
+    .status-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 18px;
-      align-items: center;
+      gap: 14px;
+      margin-top: 18px;
     }
 
-    @media (min-width: 700px) {
-      .result-top {
-        grid-template-columns: 230px 1fr;
+    @media (min-width: 780px) {
+      .status-grid {
+        grid-template-columns: repeat(4, 1fr);
       }
     }
 
-    .gauge-wrap {
-      display: flex;
-      justify-content: center;
+    .status-card {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 10px 28px rgba(30, 64, 175, 0.08);
     }
 
-    .gauge {
-      width: 210px;
-      height: 210px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      background: conic-gradient(var(--safe) 0deg, #e8eef8 0deg);
-      position: relative;
-    }
-
-    .gauge::before {
-      content: "";
-      position: absolute;
-      width: 154px;
-      height: 154px;
-      border-radius: 50%;
-      background: white;
-      box-shadow: inset 0 0 0 1px var(--line);
-    }
-
-    .gauge-content {
-      position: relative;
-      text-align: center;
-    }
-
-    .score {
-      font-size: 44px;
-      font-weight: 900;
-      line-height: 1;
-    }
-
-    .score-label {
-      color: var(--muted);
-      margin-top: 6px;
-      font-size: 14px;
-    }
-
-    .result-title {
-      font-size: 28px;
-      font-weight: 900;
+    .status-card strong {
+      display: block;
+      color: #1e3a8a;
       margin-bottom: 8px;
     }
 
-    .pill {
-      display: inline-block;
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-weight: 800;
+    .status-value {
+      font-size: 26px;
+      font-weight: 900;
+    }
+
+    .status-card span {
+      color: var(--muted);
       font-size: 14px;
-      margin: 8px 6px 0 0;
     }
 
-    .pill.safe {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .pill.warning {
-      background: #ffedd5;
-      color: #9a3412;
-    }
-
-    .pill.danger {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .factor-list {
-      margin-top: 20px;
-      display: grid;
-      gap: 12px;
-    }
-
-    .factor {
-      background: #f8fbff;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 14px;
-    }
-
-    .factor-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 9px;
-      font-weight: 800;
-    }
+    .safe-text { color: var(--safe); }
+    .warning-text { color: var(--warning); }
+    .danger-text { color: var(--danger); }
 
     .bar-bg {
       height: 12px;
-      background: #e6eef9;
       border-radius: 999px;
+      background: #e6eef9;
       overflow: hidden;
+      margin-top: 10px;
     }
 
     .bar {
@@ -323,82 +584,39 @@
       width: 0%;
       border-radius: 999px;
       background: var(--safe);
-      transition: width 0.25s ease;
+      transition: width 0.2s linear;
     }
 
-    .notice {
-      background: #f8fbff;
-      border: 1px dashed #b9c7da;
-      border-radius: 16px;
-      padding: 15px;
-      color: #475569;
-      line-height: 1.7;
-    }
-
-    .recommendations {
+    .analysis-box {
       margin-top: 18px;
-      padding-left: 20px;
+      background: #f8fbff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
       line-height: 1.8;
+      color: #334155;
     }
 
-    .data-table {
+    .log-table {
       width: 100%;
       border-collapse: collapse;
-      overflow: hidden;
-      border-radius: 14px;
       font-size: 14px;
     }
 
-    .data-table th,
-    .data-table td {
+    .log-table th,
+    .log-table td {
       padding: 11px;
       border-bottom: 1px solid var(--line);
       text-align: center;
     }
 
-    .data-table th {
+    .log-table th {
       background: #eff6ff;
       color: #1e3a8a;
     }
 
-    .data-table tr:last-child td {
-      border-bottom: 0;
-    }
-
     .table-wrap {
       overflow-x: auto;
-    }
-
-    .mini-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-    }
-
-    @media (min-width: 750px) {
-      .mini-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-
-    .mini-card {
-      border-radius: 18px;
-      border: 1px solid var(--line);
-      background: #f8fbff;
-      padding: 18px;
-      min-height: 150px;
-    }
-
-    .mini-card strong {
-      display: block;
-      margin-bottom: 8px;
-      color: #1e3a8a;
-    }
-
-    .mini-card p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.65;
     }
 
     footer {
@@ -406,35 +624,75 @@
       color: var(--muted);
       padding: 28px 16px;
     }
-
-    .hidden {
-      display: none;
-    }
   </style>
 </head>
 
 <body>
   <header>
     <div class="hero">
-      <span class="badge">Drone Safety Lab · 탐구형 웹앱</span>
-      <h1>기상 조건 기반<br />드론 비행 안전 지수 분석</h1>
+      <span class="badge">Drone Flight Preview Simulator</span>
+      <h1>드론 비행 전<br />3D 상황 예측 시뮬레이터</h1>
       <p>
-        풍속, 돌풍, 강수, 기온, 배터리, 적재 무게, 예상 비행 시간을 입력하면
-        드론 비행 안전 지수와 위험 요인을 분석합니다.
+        기상, 배터리, 온도, 적재 무게 등 비행 조건을 입력하면
+        3D 드론 시뮬레이션을 통해 비행 전 예상 상황을 확인할 수 있습니다.
       </p>
     </div>
   </header>
 
   <main>
-    <div class="grid">
+    <div class="layout">
       <section>
-        <h2>1. 비행 조건 입력</h2>
+        <h2>1. 3D 시뮬레이션 화면</h2>
         <p class="desc">
-          실제 비행 허가 판단이 아니라, 탐구 활동을 위한 교육용 안전 판단 모델입니다.
-          입력값을 바꿔 가며 어떤 요소가 위험도를 높이는지 확인할 수 있습니다.
+          입력한 조건에 따라 드론의 기울기, 흔들림, 이동 경로, 날씨 효과, 배터리 감소가 실시간으로 표현됩니다.
         </p>
 
-        <div class="input-row">
+        <div id="scene" class="scene">
+          <div class="sun"></div>
+          <div class="cloud"></div>
+
+          <div id="windLayer" class="wind-layer">
+            <div class="wind-line"></div>
+            <div class="wind-line"></div>
+            <div class="wind-line"></div>
+            <div class="wind-line"></div>
+            <div class="wind-line"></div>
+          </div>
+
+          <div id="weatherLayer" class="weather-layer"></div>
+
+          <div class="floor"></div>
+          <div class="path"></div>
+          <div class="shadow"></div>
+
+          <div id="droneWrap" class="drone-wrap">
+            <div id="drone3d" class="drone3d">
+              <div class="arm"></div>
+              <div class="arm vertical"></div>
+
+              <div class="motor m1"></div>
+              <div class="motor m2"></div>
+              <div class="motor m3"></div>
+              <div class="motor m4"></div>
+
+              <div class="drone-body"></div>
+            </div>
+          </div>
+
+          <div id="banner" class="warning-banner">
+            조건을 입력한 뒤 <b>시뮬레이션 시작</b> 버튼을 눌러 주세요.
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>2. 비행 조건 입력</h2>
+        <p class="desc">
+          실제 비행 허가 판단이 아니라, 탐구 활동을 위한 교육용 예측 모델입니다.
+          실제 비행 전에는 기체 매뉴얼, 비행 가능 구역, 기상 정보를 반드시 확인해야 합니다.
+        </p>
+
+        <div class="control-grid">
           <div>
             <label for="wind">평균 풍속 m/s</label>
             <input id="wind" type="number" min="0" step="0.1" value="4" />
@@ -444,9 +702,7 @@
             <label for="gust">순간 돌풍 m/s</label>
             <input id="gust" type="number" min="0" step="0.1" value="6" />
           </div>
-        </div>
 
-        <div class="input-row">
           <div>
             <label for="rain">강수 상태</label>
             <select id="rain">
@@ -461,21 +717,17 @@
             <label for="temp">기온 ℃</label>
             <input id="temp" type="number" step="0.1" value="24" />
           </div>
-        </div>
 
-        <div class="input-row">
           <div>
             <label for="battery">배터리 잔량 %</label>
-            <input id="battery" type="number" min="0" max="100" step="1" value="78" />
+            <input id="battery" type="number" min="0" max="100" step="1" value="80" />
           </div>
 
           <div>
             <label for="payload">추가 적재 무게 g</label>
             <input id="payload" type="number" min="0" step="10" value="120" />
           </div>
-        </div>
 
-        <div class="input-row">
           <div>
             <label for="duration">예상 비행 시간 분</label>
             <input id="duration" type="number" min="1" step="1" value="12" />
@@ -492,127 +744,65 @@
         </div>
 
         <div class="button-row">
-          <button onclick="analyzeFlight()">안전 지수 분석하기</button>
-          <button class="secondary" onclick="loadScenario('caution')">주의 예시 입력</button>
-          <button class="danger-btn" onclick="loadScenario('danger')">위험 예시 입력</button>
-        </div>
-      </section>
-
-      <section>
-        <h2>2. 분석 결과</h2>
-
-        <div id="emptyState" class="notice">
-          왼쪽 입력값을 설정한 뒤 <b>안전 지수 분석하기</b>를 눌러 주세요.
-          결과에는 안전 지수, 등급, 위험 요인, 추천 조치가 표시됩니다.
-        </div>
-
-        <div id="resultArea" class="hidden">
-          <div class="result-top">
-            <div class="gauge-wrap">
-              <div id="gauge" class="gauge">
-                <div class="gauge-content">
-                  <div id="score" class="score">0</div>
-                  <div class="score-label">안전 지수 / 100</div>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <div id="gradeTitle" class="result-title">분석 전</div>
-              <p id="summary" class="desc"></p>
-              <div id="pills"></div>
-            </div>
-          </div>
-
-          <div id="factorList" class="factor-list"></div>
-
-          <h3 style="margin-top: 22px;">추천 조치</h3>
-          <ul id="recommendations" class="recommendations"></ul>
+          <button onclick="startSimulation()">시뮬레이션 시작</button>
+          <button class="stop" onclick="stopSimulation()">시뮬레이션 정지</button>
+          <button class="secondary" onclick="loadExample('safe')">안전 예시</button>
+          <button class="secondary" onclick="loadExample('danger')">위험 예시</button>
         </div>
       </section>
     </div>
 
     <section style="margin-top: 18px;">
-      <h2>3. 위험도 계산 모델</h2>
-      <p class="desc">
-        이 웹앱은 각 위험 요인을 0~100점으로 환산한 뒤 가중치를 적용해 최종 위험도를 계산합니다.
-        최종 안전 지수는 <b>100 - 종합 위험도</b>로 표현됩니다.
-      </p>
+      <h2>3. 실시간 비행 상태</h2>
 
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>요인</th>
-              <th>가중치</th>
-              <th>위험도 증가 기준</th>
-              <th>탐구 의미</th>
-            </tr>
-          </thead>
+      <div class="status-grid">
+        <div class="status-card">
+          <strong>비행 진행률</strong>
+          <div id="progressText" class="status-value">0%</div>
+          <span>예상 경로 진행 정도</span>
+          <div class="bar-bg">
+            <div id="progressBar" class="bar"></div>
+          </div>
+        </div>
 
-          <tbody>
-            <tr>
-              <td>평균 풍속</td>
-              <td>25%</td>
-              <td>풍속이 높을수록 증가</td>
-              <td>자세 제어와 위치 유지에 영향</td>
-            </tr>
+        <div class="status-card">
+          <strong>예상 배터리</strong>
+          <div id="batteryText" class="status-value">-</div>
+          <span>조건에 따른 가상 소모량</span>
+          <div class="bar-bg">
+            <div id="batteryBar" class="bar"></div>
+          </div>
+        </div>
 
-            <tr>
-              <td>돌풍</td>
-              <td>12%</td>
-              <td>순간 바람이 강할수록 증가</td>
-              <td>갑작스러운 흔들림과 경로 이탈 가능성</td>
-            </tr>
+        <div class="status-card">
+          <strong>안전 지수</strong>
+          <div id="safetyText" class="status-value">-</div>
+          <span>100점에 가까울수록 안정</span>
+          <div class="bar-bg">
+            <div id="safetyBar" class="bar"></div>
+          </div>
+        </div>
 
-            <tr>
-              <td>강수</td>
-              <td>18%</td>
-              <td>비, 눈, 우박일수록 증가</td>
-              <td>전자 장치, 모터, 시야 확보에 영향</td>
-            </tr>
+        <div class="status-card">
+          <strong>예측 판정</strong>
+          <div id="gradeText" class="status-value">대기</div>
+          <span>시뮬레이션 결과</span>
+        </div>
+      </div>
 
-            <tr>
-              <td>기온</td>
-              <td>13%</td>
-              <td>너무 낮거나 높을수록 증가</td>
-              <td>배터리 성능 저하와 과열 위험</td>
-            </tr>
-
-            <tr>
-              <td>배터리</td>
-              <td>20%</td>
-              <td>잔량이 낮을수록 증가</td>
-              <td>안전 귀환 가능성과 직결</td>
-            </tr>
-
-            <tr>
-              <td>적재 무게</td>
-              <td>7%</td>
-              <td>무게가 증가할수록 증가</td>
-              <td>모터 부하와 에너지 소비 증가</td>
-            </tr>
-
-            <tr>
-              <td>비행 시간·숙련도</td>
-              <td>5%</td>
-              <td>긴 비행, 낮은 숙련도일수록 증가</td>
-              <td>운용 난이도와 실수 가능성 반영</td>
-            </tr>
-          </tbody>
-        </table>
+      <div id="analysisBox" class="analysis-box">
+        아직 분석 결과가 없습니다. 조건을 입력하고 시뮬레이션을 시작해 주세요.
       </div>
     </section>
 
-    <section>
-      <h2>4. 테스트 기록</h2>
+    <section style="margin-top: 18px;">
+      <h2>4. 시뮬레이션 기록</h2>
       <p class="desc">
-        분석 버튼을 누를 때마다 테스트 기록이 저장됩니다. 생기부용 보고서에는
-        이 표를 캡처해서 “조건별 결과 검증” 자료로 활용할 수 있습니다.
+        시작 버튼을 누를 때마다 조건과 결과가 기록됩니다. 이 표는 보고서에서 조건별 비교 자료로 활용할 수 있습니다.
       </p>
 
       <div class="table-wrap">
-        <table class="data-table">
+        <table class="log-table">
           <thead>
             <tr>
               <th>시간</th>
@@ -620,85 +810,88 @@
               <th>돌풍</th>
               <th>강수</th>
               <th>기온</th>
-              <th>배터리</th>
+              <th>시작 배터리</th>
+              <th>예상 종료 배터리</th>
               <th>안전 지수</th>
               <th>판정</th>
             </tr>
           </thead>
 
-          <tbody id="historyBody">
+          <tbody id="logBody">
             <tr>
-              <td colspan="8">아직 저장된 테스트가 없습니다.</td>
+              <td colspan="9">아직 기록이 없습니다.</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div class="button-row" style="grid-template-columns: 1fr; max-width: 260px;">
-        <button class="danger-btn" onclick="clearHistory()">테스트 기록 삭제</button>
-      </div>
-    </section>
-
-    <section>
-      <h2>5. 탐구 정리</h2>
-
-      <div class="mini-grid">
-        <div class="mini-card">
-          <strong>탐구 동기</strong>
-          <p>
-            드론 조종사는 비행 전 기상 조건과 기체 상태를 판단해야 한다.
-            이를 웹앱으로 구현하여 안전 판단 과정을 시각화하고자 했다.
-          </p>
-        </div>
-
-        <div class="mini-card">
-          <strong>탐구 과정</strong>
-          <p>
-            위험 요인을 변수로 정하고, 조건문과 가중치 계산을 활용해
-            안전 지수와 등급이 자동으로 출력되도록 설계했다.
-          </p>
-        </div>
-
-        <div class="mini-card">
-          <strong>탐구 결과</strong>
-          <p>
-            풍속, 강수, 배터리 잔량이 안전 지수에 큰 영향을 주며,
-            드론 운용에는 기상 정보 분석과 안전 판단 능력이 중요함을 확인했다.
-          </p>
-        </div>
+      <div class="button-row" style="max-width: 260px;">
+        <button class="stop" onclick="clearLogs()">기록 삭제</button>
       </div>
     </section>
   </main>
 
   <footer>
-    Drone Safety Lab · GitHub Pages Project
+    Drone Flight Preview Simulator · GitHub Pages Project
   </footer>
 
   <script>
-    const historyKey = "droneSafetyHistoryV2";
+    let simulationTimer = null;
+    let simulationStep = 0;
+    let currentData = null;
+    let currentResult = null;
+
+    const totalSteps = 140;
+    const logKey = "dronePreviewSimulationLogs";
 
     function clamp(value, min, max) {
       return Math.max(min, Math.min(max, value));
     }
 
-    function getRainText(value) {
+    function getInputData() {
+      return {
+        wind: Number(document.getElementById("wind").value),
+        gust: Number(document.getElementById("gust").value),
+        rain: Number(document.getElementById("rain").value),
+        temp: Number(document.getElementById("temp").value),
+        battery: Number(document.getElementById("battery").value),
+        payload: Number(document.getElementById("payload").value),
+        duration: Number(document.getElementById("duration").value),
+        skill: Number(document.getElementById("skill").value)
+      };
+    }
+
+    function validateData(data) {
+      if (Object.values(data).some(value => Number.isNaN(value))) {
+        alert("모든 값을 올바르게 입력해 주세요.");
+        return false;
+      }
+
+      if (data.battery < 0 || data.battery > 100) {
+        alert("배터리 잔량은 0~100 사이로 입력해 주세요.");
+        return false;
+      }
+
+      if (data.duration <= 0) {
+        alert("예상 비행 시간은 1분 이상으로 입력해 주세요.");
+        return false;
+      }
+
+      return true;
+    }
+
+    function rainText(value) {
       const map = {
-        "0": "없음",
-        "35": "약한 비",
-        "70": "강한 비",
-        "90": "눈/우박"
+        0: "없음",
+        35: "약한 비",
+        70: "강한 비",
+        90: "눈/우박"
       };
 
-      return map[String(value)] || "없음";
+      return map[value] || "없음";
     }
 
-    function riskColor(risk) {
-      if (risk >= 70) return "var(--danger)";
-      if (risk >= 35) return "var(--warning)";
-      return "var(--safe)";
-    }
-
-    function calculateRisks(data) {
+    function calculateRisk(data) {
       const windRisk = clamp((data.wind / 12) * 100, 0, 100);
       const gustRisk = clamp((data.gust / 15) * 100, 0, 100);
       const rainRisk = data.rain;
@@ -714,18 +907,42 @@
         : clamp(((60 - data.battery) / 60) * 100, 0, 100);
 
       const payloadRisk = clamp((data.payload / 600) * 100, 0, 100);
-      const operationRisk = clamp((data.duration / 30) * 60 + data.skill, 0, 100);
+      const durationRisk = clamp((data.duration / 30) * 100, 0, 100);
+      const skillRisk = data.skill;
 
-      const weightedRisk =
-        windRisk * 0.25 +
+      const totalRisk =
+        windRisk * 0.24 +
         gustRisk * 0.12 +
-        rainRisk * 0.18 +
+        rainRisk * 0.17 +
         tempRisk * 0.13 +
-        batteryRisk * 0.20 +
+        batteryRisk * 0.18 +
         payloadRisk * 0.07 +
-        operationRisk * 0.05;
+        durationRisk * 0.04 +
+        skillRisk * 0.05;
 
-      const safetyScore = Math.round(100 - weightedRisk);
+      const safetyScore = Math.round(100 - totalRisk);
+
+      const drain =
+        10 +
+        data.duration * 0.7 +
+        windRisk * 0.07 +
+        gustRisk * 0.035 +
+        rainRisk * 0.04 +
+        tempRisk * 0.05 +
+        payloadRisk * 0.045;
+
+      const endBattery = Math.round(clamp(data.battery - drain, 0, 100));
+
+      let grade = "";
+      if (safetyScore >= 80 && endBattery >= 30) {
+        grade = "비행 가능";
+      } else if (safetyScore >= 60 && endBattery >= 25) {
+        grade = "주의 비행";
+      } else if (safetyScore >= 40 && endBattery >= 20) {
+        grade = "비행 주의";
+      } else {
+        grade = "비행 중단 권장";
+      }
 
       return {
         windRisk,
@@ -734,237 +951,302 @@
         tempRisk,
         batteryRisk,
         payloadRisk,
-        operationRisk,
-        weightedRisk,
-        safetyScore
+        durationRisk,
+        skillRisk,
+        totalRisk,
+        safetyScore,
+        drain,
+        endBattery,
+        grade
       };
     }
 
-    function analyzeFlight() {
-      const data = {
-        wind: Number(document.getElementById("wind").value),
-        gust: Number(document.getElementById("gust").value),
-        rain: Number(document.getElementById("rain").value),
-        temp: Number(document.getElementById("temp").value),
-        battery: Number(document.getElementById("battery").value),
-        payload: Number(document.getElementById("payload").value),
-        duration: Number(document.getElementById("duration").value),
-        skill: Number(document.getElementById("skill").value)
-      };
+    function startSimulation() {
+      const data = getInputData();
 
-      if (Object.values(data).some(value => Number.isNaN(value))) {
-        alert("모든 입력값을 올바르게 입력해 주세요.");
+      if (!validateData(data)) return;
+
+      stopSimulation();
+
+      currentData = data;
+      currentResult = calculateRisk(data);
+      simulationStep = 0;
+
+      updateWeather(data);
+      updateAnalysisText(data, currentResult);
+      saveLog(data, currentResult);
+      renderLogs();
+
+      document.getElementById("banner").innerHTML =
+        "시뮬레이션을 시작했습니다. 조건에 따라 드론의 자세와 배터리 변화가 표시됩니다.";
+
+      simulationTimer = setInterval(runSimulationFrame, 90);
+    }
+
+    function stopSimulation() {
+      if (simulationTimer) {
+        clearInterval(simulationTimer);
+        simulationTimer = null;
+      }
+    }
+
+    function runSimulationFrame() {
+      if (!currentData || !currentResult) return;
+
+      simulationStep++;
+
+      const progress = clamp(simulationStep / totalSteps, 0, 1);
+      const progressPercent = Math.round(progress * 100);
+
+      const baseX = -240 + progress * 480;
+      const windDrift = Math.sin(simulationStep * 0.18) * currentData.wind * 1.8;
+      const gustShake = Math.sin(simulationStep * 0.55) * currentData.gust * 1.2;
+      const riskDrop = currentResult.totalRisk > 65
+        ? Math.sin(simulationStep * 0.12) * 35
+        : Math.sin(simulationStep * 0.09) * 12;
+
+      const moveX = baseX + windDrift;
+      const moveY = -30 + riskDrop + Math.sin(simulationStep * 0.12) * 10;
+
+      const tiltX = 58 + clamp(currentData.gust * 2.2, 0, 32);
+      const tiltY = clamp(currentData.wind * -2.4 + Math.sin(simulationStep * 0.25) * currentData.gust, -34, 26);
+      const tiltZ = clamp((100 - currentResult.safetyScore) * 0.22 + gustShake, -30, 36);
+
+      document.documentElement.style.setProperty("--drone-x", `${moveX}px`);
+      document.documentElement.style.setProperty("--drone-y", `${moveY}px`);
+      document.documentElement.style.setProperty("--tilt-x", `${tiltX}deg`);
+      document.documentElement.style.setProperty("--tilt-y", `${tiltY}deg`);
+      document.documentElement.style.setProperty("--tilt-z", `${tiltZ}deg`);
+
+      const currentBattery = Math.round(
+        clamp(currentData.battery - currentResult.drain * progress, 0, 100)
+      );
+
+      const changingSafety = Math.round(
+        clamp(currentResult.safetyScore - Math.sin(progress * Math.PI) * currentResult.totalRisk * 0.08, 0, 100)
+      );
+
+      updateStatus(progressPercent, currentBattery, changingSafety, currentResult.grade);
+
+      if (currentBattery <= 20 && progress < 0.95) {
+        document.getElementById("banner").innerHTML =
+          "배터리 잔량이 낮아졌습니다. 실제 비행 상황이라면 즉시 안전 귀환을 고려해야 합니다.";
+      }
+
+      if (currentResult.totalRisk >= 70) {
+        document.getElementById("banner").innerHTML =
+          "위험 조건이 높게 감지되었습니다. 드론이 크게 흔들리는 상황으로 시뮬레이션됩니다.";
+      }
+
+      if (simulationStep >= totalSteps) {
+        stopSimulation();
+
+        if (currentResult.grade === "비행 가능") {
+          document.getElementById("banner").innerHTML =
+            "시뮬레이션 완료: 현재 조건에서는 비교적 안정적인 비행이 예상됩니다.";
+        } else if (currentResult.grade === "주의 비행" || currentResult.grade === "비행 주의") {
+          document.getElementById("banner").innerHTML =
+            "시뮬레이션 완료: 일부 위험 요인이 있어 실제 비행 전 조건을 다시 확인해야 합니다.";
+        } else {
+          document.getElementById("banner").innerHTML =
+            "시뮬레이션 완료: 현재 조건에서는 비행을 피하는 것이 안전합니다.";
+        }
+      }
+    }
+
+    function updateStatus(progress, battery, safety, grade) {
+      const progressBar = document.getElementById("progressBar");
+      const batteryBar = document.getElementById("batteryBar");
+      const safetyBar = document.getElementById("safetyBar");
+
+      document.getElementById("progressText").textContent = `${progress}%`;
+      document.getElementById("batteryText").textContent = `${battery}%`;
+      document.getElementById("safetyText").textContent = `${safety}점`;
+      document.getElementById("gradeText").textContent = grade;
+
+      progressBar.style.width = `${progress}%`;
+      batteryBar.style.width = `${battery}%`;
+      safetyBar.style.width = `${safety}%`;
+
+      batteryBar.style.background = battery >= 50
+        ? "var(--safe)"
+        : battery >= 30
+          ? "var(--warning)"
+          : "var(--danger)";
+
+      safetyBar.style.background = safety >= 80
+        ? "var(--safe)"
+        : safety >= 50
+          ? "var(--warning)"
+          : "var(--danger)";
+
+      const gradeText = document.getElementById("gradeText");
+      gradeText.className = "status-value";
+
+      if (grade === "비행 가능") {
+        gradeText.classList.add("safe-text");
+      } else if (grade === "주의 비행" || grade === "비행 주의") {
+        gradeText.classList.add("warning-text");
+      } else {
+        gradeText.classList.add("danger-text");
+      }
+    }
+
+    function updateWeather(data) {
+      const weatherLayer = document.getElementById("weatherLayer");
+      const scene = document.getElementById("scene");
+      const windLines = document.querySelectorAll(".wind-line");
+
+      weatherLayer.innerHTML = "";
+
+      const windDuration = clamp(3.2 - data.wind * 0.18, 0.8, 3.2);
+      windLines.forEach(line => {
+        line.style.animationDuration = `${windDuration}s`;
+        line.style.opacity = data.wind > 0 ? "1" : "0.2";
+      });
+
+      if (data.rain === 0) {
+        scene.style.setProperty("--scene-brightness", "1");
         return;
       }
 
-      const risks = calculateRisks(data);
-
-      showResult(data, risks);
-      saveHistory(data, risks);
-      renderHistory();
-    }
-
-    function showResult(data, risks) {
-      document.getElementById("emptyState").classList.add("hidden");
-      document.getElementById("resultArea").classList.remove("hidden");
-
-      const score = risks.safetyScore;
-      const gauge = document.getElementById("gauge");
-      const degree = score * 3.6;
-
-      let grade = "";
-      let summary = "";
-
-      if (score >= 80) {
-        grade = "비행 가능";
-        summary = "전반적으로 안정적인 조건입니다. 그래도 실제 비행 전에는 비행 가능 구역, 기체 상태, 주변 사람과 장애물을 반드시 확인해야 합니다.";
-      } else if (score >= 60) {
-        grade = "조건부 비행 가능";
-        summary = "일부 위험 요인이 있습니다. 짧은 거리, 낮은 고도, 넓은 공간에서만 신중하게 비행하는 것이 좋습니다.";
-      } else if (score >= 40) {
-        grade = "주의 필요";
-        summary = "위험 요인이 여러 개 존재합니다. 비행을 미루거나 조건이 좋아질 때까지 기다리는 것이 좋습니다.";
+      if (data.rain === 35) {
+        scene.style.setProperty("--scene-brightness", "0.95");
+        createParticles(34, "rain");
+      } else if (data.rain === 70) {
+        scene.style.setProperty("--scene-brightness", "0.82");
+        createParticles(80, "rain");
       } else {
-        grade = "비행 위험";
-        summary = "안전 지수가 낮습니다. 현재 조건에서는 드론 비행을 피하는 것이 안전합니다.";
+        scene.style.setProperty("--scene-brightness", "0.88");
+        createParticles(60, "snow");
       }
-
-      gauge.style.background = `conic-gradient(${
-        score >= 80 ? "var(--safe)" : score >= 40 ? "var(--warning)" : "var(--danger)"
-      } ${degree}deg, #e8eef8 ${degree}deg)`;
-
-      document.getElementById("score").textContent = score;
-      document.getElementById("gradeTitle").textContent = grade;
-
-      document.getElementById("gradeTitle").style.color =
-        score >= 80 ? "var(--safe)" : score >= 40 ? "var(--warning)" : "var(--danger)";
-
-      document.getElementById("summary").textContent = summary;
-
-      const pills = [];
-
-      if (risks.windRisk >= 70) pills.push(["danger", "강풍 위험"]);
-      else if (risks.windRisk >= 35) pills.push(["warning", "풍속 주의"]);
-
-      if (risks.gustRisk >= 70) pills.push(["danger", "돌풍 위험"]);
-      else if (risks.gustRisk >= 35) pills.push(["warning", "돌풍 주의"]);
-
-      if (risks.rainRisk >= 70) pills.push(["danger", "강수 위험"]);
-      else if (risks.rainRisk >= 35) pills.push(["warning", "강수 주의"]);
-
-      if (risks.tempRisk >= 70) pills.push(["danger", "기온 위험"]);
-      else if (risks.tempRisk >= 35) pills.push(["warning", "기온 주의"]);
-
-      if (risks.batteryRisk >= 70) pills.push(["danger", "배터리 부족"]);
-      else if (risks.batteryRisk >= 35) pills.push(["warning", "배터리 주의"]);
-
-      if (pills.length === 0) {
-        pills.push(["safe", "주요 위험 요인 낮음"]);
-      }
-
-      document.getElementById("pills").innerHTML = pills.map(item =>
-        `<span class="pill ${item[0]}">${item[1]}</span>`
-      ).join("");
-
-      const factors = [
-        ["평균 풍속", risks.windRisk, "바람이 강할수록 드론이 위치를 유지하기 어려움"],
-        ["순간 돌풍", risks.gustRisk, "갑작스러운 돌풍은 경로 이탈을 일으킬 수 있음"],
-        ["강수 상태", risks.rainRisk, "비나 눈은 전자 장치와 시야 확보에 영향을 줌"],
-        ["기온", risks.tempRisk, "저온은 배터리 성능을 낮추고 고온은 과열 위험을 높임"],
-        ["배터리", risks.batteryRisk, "잔량이 낮으면 안전 귀환 가능성이 줄어듦"],
-        ["적재 무게", risks.payloadRisk, "무게 증가는 모터 부하와 에너지 소비를 증가시킴"],
-        ["비행 시간·숙련도", risks.operationRisk, "긴 비행과 낮은 숙련도는 운용 난이도를 높임"]
-      ];
-
-      document.getElementById("factorList").innerHTML = factors.map(factor => {
-        const rounded = Math.round(factor[1]);
-
-        return `
-          <div class="factor">
-            <div class="factor-head">
-              <span>${factor[0]}</span>
-              <span>${rounded}점 위험도</span>
-            </div>
-
-            <div class="bar-bg">
-              <div class="bar" style="width: ${rounded}%; background: ${riskColor(rounded)}"></div>
-            </div>
-
-            <p class="desc" style="margin: 8px 0 0;">${factor[2]}</p>
-          </div>
-        `;
-      }).join("");
-
-      const recs = makeRecommendations(data, risks, score);
-
-      document.getElementById("recommendations").innerHTML = recs.map(rec =>
-        `<li>${rec}</li>`
-      ).join("");
     }
 
-    function makeRecommendations(data, risks, score) {
-      const recs = [];
+    function createParticles(count, type) {
+      const layer = document.getElementById("weatherLayer");
 
-      if (data.wind >= 9 || data.gust >= 12) {
-        recs.push("풍속 또는 돌풍이 강하므로 비행을 연기하고 기상 조건이 안정된 뒤 다시 확인한다.");
-      } else if (data.wind >= 6 || data.gust >= 8) {
-        recs.push("바람의 영향을 줄이기 위해 낮은 고도와 짧은 거리에서만 테스트 비행을 고려한다.");
+      for (let i = 0; i < count; i++) {
+        const particle = document.createElement("span");
+        particle.className = type === "snow" ? "particle snow" : "particle";
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.animationDelay = `${Math.random() * 3}s`;
+        particle.style.animationDuration = type === "snow"
+          ? `${2.8 + Math.random() * 2.4}s`
+          : `${0.65 + Math.random() * 0.7}s`;
+
+        layer.appendChild(particle);
+      }
+    }
+
+    function updateAnalysisText(data, result) {
+      const reasons = [];
+
+      if (data.wind >= 9) {
+        reasons.push("평균 풍속이 높아 드론이 위치를 유지하기 어렵습니다.");
+      } else if (data.wind >= 6) {
+        reasons.push("풍속이 다소 높아 낮은 고도와 짧은 비행이 적합합니다.");
+      }
+
+      if (data.gust >= 12) {
+        reasons.push("순간 돌풍이 강해 드론 자세가 크게 흔들릴 수 있습니다.");
+      } else if (data.gust >= 8) {
+        reasons.push("돌풍에 의한 일시적인 경로 이탈 가능성이 있습니다.");
       }
 
       if (data.rain >= 70) {
-        recs.push("강수 조건에서는 전자 장치 손상 위험이 있으므로 비행하지 않는다.");
+        reasons.push("강한 비, 눈, 우박은 전자 장치와 시야 확보에 위험합니다.");
       } else if (data.rain >= 35) {
-        recs.push("약한 비가 있을 때도 카메라 시야와 모터 상태를 확인하고 무리한 비행을 피한다.");
+        reasons.push("약한 비 조건에서도 모터와 카메라 시야에 주의가 필요합니다.");
       }
 
       if (data.temp < 0 || data.temp >= 37) {
-        recs.push("극단적인 기온에서는 배터리 성능 저하 또는 과열 위험이 있으므로 비행을 피한다.");
+        reasons.push("기온이 극단적이어서 배터리 성능 저하 또는 과열 위험이 있습니다.");
       } else if (data.temp < 5 || data.temp > 32) {
-        recs.push("기온이 적정 범위를 벗어나므로 배터리 상태와 모터 온도를 자주 점검한다.");
+        reasons.push("기온이 적정 범위를 벗어나 배터리와 모터 상태 확인이 필요합니다.");
       }
 
       if (data.battery < 30) {
-        recs.push("배터리 잔량이 낮으므로 충전 후 비행한다.");
-      } else if (data.battery < 50) {
-        recs.push("배터리 잔량이 충분하지 않으므로 장거리 비행을 피하고 귀환 시간을 짧게 잡는다.");
+        reasons.push("시작 배터리 잔량이 낮아 안전 귀환이 어려울 수 있습니다.");
       }
 
       if (data.payload >= 400) {
-        recs.push("추가 적재 무게가 크므로 모터 부하와 비행 시간을 줄여야 한다.");
+        reasons.push("적재 무게가 커서 모터 부하와 배터리 소모가 증가합니다.");
       }
 
-      if (score >= 80) {
-        recs.push("조건은 안정적이지만 실제 비행 전에는 비행 가능 구역, 기체 이상 여부, 주변 사람과 장애물을 확인한다.");
+      if (reasons.length === 0) {
+        reasons.push("주요 위험 요인이 낮아 비교적 안정적인 조건으로 분석됩니다.");
       }
 
-      return recs;
+      document.getElementById("analysisBox").innerHTML = `
+        <b>예측 판정:</b> ${result.grade}<br>
+        <b>안전 지수:</b> ${result.safetyScore}점 / 100점<br>
+        <b>예상 종료 배터리:</b> ${result.endBattery}%<br><br>
+        <b>분석 내용</b>
+        <ul>
+          ${reasons.map(reason => `<li>${reason}</li>`).join("")}
+        </ul>
+      `;
     }
 
-    function saveHistory(data, risks) {
-      const saved = JSON.parse(localStorage.getItem(historyKey) || "[]");
+    function saveLog(data, result) {
+      const logs = JSON.parse(localStorage.getItem(logKey) || "[]");
 
-      const record = {
+      logs.unshift({
         time: new Date().toLocaleString("ko-KR", {
           hour: "2-digit",
           minute: "2-digit"
         }),
         wind: data.wind,
         gust: data.gust,
-        rain: getRainText(data.rain),
+        rain: rainText(data.rain),
         temp: data.temp,
-        battery: data.battery,
-        score: risks.safetyScore,
-        grade:
-          risks.safetyScore >= 80
-            ? "비행 가능"
-            : risks.safetyScore >= 60
-              ? "조건부 가능"
-              : risks.safetyScore >= 40
-                ? "주의 필요"
-                : "비행 위험"
-      };
+        startBattery: data.battery,
+        endBattery: result.endBattery,
+        safetyScore: result.safetyScore,
+        grade: result.grade
+      });
 
-      saved.unshift(record);
-      localStorage.setItem(historyKey, JSON.stringify(saved.slice(0, 8)));
+      localStorage.setItem(logKey, JSON.stringify(logs.slice(0, 8)));
     }
 
-    function renderHistory() {
-      const saved = JSON.parse(localStorage.getItem(historyKey) || "[]");
-      const body = document.getElementById("historyBody");
+    function renderLogs() {
+      const logs = JSON.parse(localStorage.getItem(logKey) || "[]");
+      const body = document.getElementById("logBody");
 
-      if (saved.length === 0) {
-        body.innerHTML = `<tr><td colspan="8">아직 저장된 테스트가 없습니다.</td></tr>`;
+      if (logs.length === 0) {
+        body.innerHTML = `<tr><td colspan="9">아직 기록이 없습니다.</td></tr>`;
         return;
       }
 
-      body.innerHTML = saved.map(row => `
+      body.innerHTML = logs.map(log => `
         <tr>
-          <td>${row.time}</td>
-          <td>${row.wind}</td>
-          <td>${row.gust}</td>
-          <td>${row.rain}</td>
-          <td>${row.temp}</td>
-          <td>${row.battery}%</td>
-          <td><b>${row.score}</b></td>
-          <td>${row.grade}</td>
+          <td>${log.time}</td>
+          <td>${log.wind}</td>
+          <td>${log.gust}</td>
+          <td>${log.rain}</td>
+          <td>${log.temp}℃</td>
+          <td>${log.startBattery}%</td>
+          <td>${log.endBattery}%</td>
+          <td><b>${log.safetyScore}</b></td>
+          <td>${log.grade}</td>
         </tr>
       `).join("");
     }
 
-    function clearHistory() {
-      localStorage.removeItem(historyKey);
-      renderHistory();
+    function clearLogs() {
+      localStorage.removeItem(logKey);
+      renderLogs();
     }
 
-    function loadScenario(type) {
-      if (type === "caution") {
-        document.getElementById("wind").value = 7;
-        document.getElementById("gust").value = 9;
-        document.getElementById("rain").value = 35;
-        document.getElementById("temp").value = 34;
-        document.getElementById("battery").value = 45;
-        document.getElementById("payload").value = 250;
-        document.getElementById("duration").value = 18;
+    function loadExample(type) {
+      if (type === "safe") {
+        document.getElementById("wind").value = 3;
+        document.getElementById("gust").value = 5;
+        document.getElementById("rain").value = 0;
+        document.getElementById("temp").value = 24;
+        document.getElementById("battery").value = 86;
+        document.getElementById("payload").value = 80;
+        document.getElementById("duration").value = 10;
         document.getElementById("skill").value = 7;
       }
 
@@ -973,14 +1255,14 @@
         document.getElementById("gust").value = 14;
         document.getElementById("rain").value = 70;
         document.getElementById("temp").value = 38;
-        document.getElementById("battery").value = 22;
-        document.getElementById("payload").value = 420;
+        document.getElementById("battery").value = 24;
+        document.getElementById("payload").value = 430;
         document.getElementById("duration").value = 24;
         document.getElementById("skill").value = 15;
       }
     }
 
-    renderHistory();
+    renderLogs();
   </script>
 </body>
 </html>
